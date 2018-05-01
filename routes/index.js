@@ -19,9 +19,40 @@ router.get('/register', function(req, res, next) {
   res.render('register', { title: 'REGISTRATION' });
 });
 
+router.get('/register/:username', function(req, res, next) {
+  const db = require('../db.js');
+  var username = req.params.username;
+
+  db.query('SELECT username FROM test WHERE username = ?', [username],
+   function(err, results, fields){
+    if (err) throw err;
+
+    if (results.length === 0){
+      console.log('not a valid sponsor name');
+    }
+    var sponsor = results
+    if (sponsor){
+      {sponsor: sponsor}
+      console.log(sponsor);
+    }
+    /**else{
+      var sponsor = { sponsor: results};
+      console.log(sponsor)
+    }*/
+    //console.log(results);
+  });
+  
+  res.render('register', { title: 'REGISTRATION' });
+});
+
 //get login
 router.get('/login', function(req, res, next) {
   res.render('login', { title: 'LOG IN' });
+});
+
+//Get dashboard
+router.get('/dashboard', function(req, res, next) {
+  res.render('dashboard', { title: 'USER DASHBOARD' });
 });
 
 //get logout
@@ -62,29 +93,35 @@ router.post('/register', function(req, res, next) {
     var cpass = req.body.pass2
     var email = req.body.email
     var sponsor = req.body.sponsor
-
-  /**var noreg = function(reg){
-    reg == false
-  }*/
  
     var db = require('../db.js');
-    bcrypt.hash(password, saltRounds, function(err, hash){
-      db.query('INSERT INTO test (username, email, sponsor, password, status) VALUES (?, ?, ?, ?, ?)', [username, email, sponsor, hash, 0], function(error, result, fields){
-        if (error) throw error;
-        else{
-          db.query('SELECT LAST_INSERT_ID() as user_id', function(error, results, fields){
+    db.query('SELECT username FROM test WHERE username = ?', [sponsor], function(err, results, fields){
+      if (err) throw err;
+
+      if (results.length === 0){
+        console.log('not a valid sponsor name');
+      }
+      else{
+        var spon = results;
+        console.log(spon);
+        bcrypt.hash(password, saltRounds, function(err, hash){
+          db.query('INSERT INTO test (username, email, sponsor, password, status) VALUES (?, ?, ?, ?, ?)', [username, email, sponsor, hash, 0], function(error, result, fields){
             if (error) throw error;
-  
-            var user_id = results[0];
-            console.log(results[0])
-            req.login(user_id, function(err){
-              res.redirect('profile')
-              console.log('Registration was a success')
-            });
+            else{
+              db.query('SELECT LAST_INSERT_ID() as user_id', function(error, results, fields){
+                if (error) throw error;
+                var user_id = results[0];
+                console.log(results[0])
+                req.login(user_id, function(err){
+                  res.redirect('profile')
+                  console.log('Registration was a success')
+                });
+              });
+            } 
+              
           });
-        }
-        
-      });
+        });
+      }
     });
   }
 });

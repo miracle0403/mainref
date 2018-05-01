@@ -10,9 +10,9 @@
   
 <form method ="POST" action ="/register">
    <div class="form-group">
-    <label for="sponsor">Sponsor</label>
+    <label for="sponsor" name = "sponsor">Sponsor</label> 
     <input type="text" class="form-control" 
-id="sponsor" name ="sponsor"  />
+id="sponsor" name ="sponsor" value = "{{#if sponsor}} {{#each}} {{this.username}} {{/each}} {{/if}}" />
 </div>
     <label for="username">username</label>
     <input type="username" class="form-control" 
