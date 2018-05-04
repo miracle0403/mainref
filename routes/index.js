@@ -35,11 +35,7 @@ router.get('/register/:username', function(req, res, next) {
       {sponsor: sponsor}
       console.log(sponsor);
     }
-    /**else{
-      var sponsor = { sponsor: results};
-      console.log(sponsor)
-    }*/
-    //console.log(results);
+    
   });
   
   res.render('register', { title: 'REGISTRATION' });
@@ -143,8 +139,53 @@ function authentificationMiddleware(){
   res.redirect('/login'); 
   } 
 }
+//post login
 router.post('/login', passport.authenticate('local', {
   failureRedirect: '/login',
   successRedirect: '/profile'
 }));
+
+//post profile
+router.post('/profile', function(req, res, next) {
+  console.log(req.body)
+  //req.checkBody('account_number', 'Account Number must be between 10 numbers only').len(10);
+  req.checkBody('email', 'Email must be between 8 to 25 characters').len(8,25);
+  req.checkBody('email', 'Invalid Email').isEmail();
+  req.checkBody('bank_name', 'Bank Name must be between 8 to 25 characters').len(8,25);
+  req.checkBody('account_name', 'Account Name must be between 8 to 25 characters').len(8,25);
+  //req.checkBody('pass1', 'Password must have upper case, lower case, symbol, and number').matches(/^(?=,*\d)(?=, *[a-z])(?=, *[A-Z])(?!, [^a-zA-Z0-9]).{8,}$/, "i")
+ 
+  var errors = req.validationErrors();
+
+  if (errors) {
+    console.log(JSON.stringify(errors));
+    res.render('profile', { title: 'UPDATE FAILED', errors: errors});
+    
+  }
+  else {
+    var phone = req.body.phone
+    var bank = req.body.bank_name
+    var accountNumber = req.body.account_number
+    var accountName = req.body.account_name
+    //var email = req.body.email
+     
+    var db = require('../db.js');
+    var user = isAuthenticated();
+
+    db.query('SELECT user_id, from profile WHERE user_id = ?, ?', [user],
+    function(err, results, fields){
+      if (err) throw err;
+ 
+      if (results.length === 0){
+       console.log('please edit your profile page');
+      }
+    });
+    /**db.query('INSERT INTO profile (user_id, email, phone, bank_name, account_name, account_number) VALUES (?, ?, ?, ?, ?, ?)', [phone, bank, accountName, accountNumber], function(error, result, fields){
+      if (error) throw error;
+      else{
+        res.render('profile', {title: 'PROFILE EDITED SUCCESSFULLY'});
+      }
+    });*/
+  }
+});
 module.exports = router;
