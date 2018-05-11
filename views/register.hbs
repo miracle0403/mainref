@@ -8,11 +8,11 @@
   {{/each}}
 {{/if}}
   
-<form method ="POST" action ="/register">
+<form method ="POST" action ="/member/register">
    <div class="form-group">
     <label for="sponsor" name = "sponsor">Sponsor</label> 
     <input type="text" class="form-control" 
-id="sponsor" name ="sponsor"  />
+id="sponsor" name ="sponsor" value = "{{sponsor}}" />
 </div>
     <label for="username">username</label>
     <input type="username" class="form-control" 

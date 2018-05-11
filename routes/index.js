@@ -15,11 +15,11 @@ router.get('/', function(req, res, next) {
 });
 
 //register get request
-router.get('/register', function(req, res, next) {
+router.get('/member/register', function(req, res, next) {
   res.render('register', { title: 'REGISTRATION' });
 });
 
-router.get('/register/:username', function(req, res, next) {
+router.get('/member/register/:username', function(req, res, next) {
   const db = require('../db.js');
   var username = req.params.username;
 
@@ -28,43 +28,70 @@ router.get('/register/:username', function(req, res, next) {
     if (err) throw err;
 
     if (results.length === 0){
+      res.render('register')
       console.log('not a valid sponsor name');
+    }else{
+      var sponsor = results
+      console.log(sponsor)
+      if (sponsor){
+        console.log(JSON.stringify(sponsor));
+        res.render('register', { title: 'REGISTRATION', sponsor: sponsor });
+      }     
     }
-    var sponsor = results
-    if (sponsor){
-      {sponsor: sponsor}
-      console.log(sponsor);
-    }
-    
-  });
-  
-  res.render('register', { title: 'REGISTRATION' });
+  });  
 });
 
 //get login
-router.get('/login', function(req, res, next) {
+router.get('/member/login', function(req, res, next) {
   res.render('login', { title: 'LOG IN' });
 });
 
 //Get dashboard
-router.get('/dashboard', function(req, res, next) {
-  res.render('dashboard', { title: 'USER DASHBOARD' });
+router.get('/member/dashboard', function(req, res, next) {
+  res.render('dashboard', { title: 'DASHBOARD' });
+});
+
+//Get joinmatrix
+router.get('/member/joinmatrix', function(req, res, next) {
+  res.render('joinmatrix', { title: 'JOIN THE BEST MATRIX' });
+});
+
+//Get PROVIDE SERVICES
+router.get('/member/provideservice', function(req, res, next) {
+  res.render('provideservice', { title: 'GET HIRED!' });
+});
+
+//Get dashboard
+router.get('/member/requestservice', function(req, res, next) {
+  res.render('requestservice', { title: 'GET YOUR JOB DONE' });
 });
 
 //get logout
-router.get('/logout', function(req, res, next) {
+router.get('/member/logout', function(req, res, next) {
   req.logout();
   req.session.destroy();
   res.redirect('/');
 });
 
 //get profile
-router.get('/profile', authentificationMiddleware(), function(req, res, next) {
-  res.render('profile', { title: 'USER PPROFILE' });
+router.get('/member/profile', authentificationMiddleware(), function(req, res, next) {
+  
+  var db = require('../db.js');
+  var currentUser = req.session.passport.user.user_id;
+
+  //get sponsor name fromdatabase to profile page
+  db.query('SELECT sponsor FROM test WHERE user_id = ?', [currentUser], function(err, results, fields){
+    if (err) throw err;
+
+    var sponsor = results;
+    if (sponsor){
+      res.render('profile', {title: 'PROFILE', sponsor: results});
+    }
+  });
 });
 
 //post register
-router.post('/register', function(req, res, next) {
+router.post('/member/register', function(req, res, next) {
   console.log(req.body)
   req.checkBody('sponsor', 'Sponsor must not be empty').notEmpty();
   req.checkBody('sponsor', 'Sponsor must be between 8 to 25 characters').len(8,25);
@@ -80,7 +107,7 @@ router.post('/register', function(req, res, next) {
 
   if (errors) {
     console.log(JSON.stringify(errors));
-    res.render('register', { title: 'REGISTRATION FAILED', errors: errors});
+    res.render('/member/register', { title: 'REGISTRATION FAILED', errors: errors});
     //return noreg
   }
   else {
@@ -109,7 +136,7 @@ router.post('/register', function(req, res, next) {
                 var user_id = results[0];
                 console.log(results[0])
                 req.login(user_id, function(err){
-                  res.redirect('profile')
+                  res.render('member/profile')
                   console.log('Registration was a success')
                 });
               });
@@ -139,14 +166,16 @@ function authentificationMiddleware(){
   res.redirect('/login'); 
   } 
 }
+
+
 //post login
-router.post('/login', passport.authenticate('local', {
-  failureRedirect: '/login',
-  successRedirect: '/profile'
+router.post('/member/login', passport.authenticate('local', {
+  failureRedirect: '/member/login',
+  successRedirect: '/member/profile'
 }));
 
 //post profile
-router.post('/profile', function(req, res, next) {
+router.post('/member/profile', function(req, res, next) {
   console.log(req.body)
   //req.checkBody('account_number', 'Account Number must be between 10 numbers only').len(10);
   req.checkBody('email', 'Email must be between 8 to 25 characters').len(8,25);
@@ -156,7 +185,7 @@ router.post('/profile', function(req, res, next) {
   //req.checkBody('pass1', 'Password must have upper case, lower case, symbol, and number').matches(/^(?=,*\d)(?=, *[a-z])(?=, *[A-Z])(?!, [^a-zA-Z0-9]).{8,}$/, "i")
  
   var errors = req.validationErrors();
-
+ 
   if (errors) {
     console.log(JSON.stringify(errors));
     res.render('profile', { title: 'UPDATE FAILED', errors: errors});
@@ -167,25 +196,17 @@ router.post('/profile', function(req, res, next) {
     var bank = req.body.bank_name
     var accountNumber = req.body.account_number
     var accountName = req.body.account_name
-    //var email = req.body.email
+    var email = req.body.email
      
     var db = require('../db.js');
-    var user = isAuthenticated();
-
-    db.query('SELECT user_id, from profile WHERE user_id = ?, ?', [user],
-    function(err, results, fields){
-      if (err) throw err;
- 
-      if (results.length === 0){
-       console.log('please edit your profile page');
-      }
-    });
-    /**db.query('INSERT INTO profile (user_id, email, phone, bank_name, account_name, account_number) VALUES (?, ?, ?, ?, ?, ?)', [phone, bank, accountName, accountNumber], function(error, result, fields){
+    var user = req.isAuthenticated();
+    
+    db.query('UPDATE test SET ?, ?, ?, ?, ? [phone, email, bank, accountNumber, accountName], WHERE user_id = ?', [user], function(error, result, fields){
       if (error) throw error;
-      else{
-        res.render('profile', {title: 'PROFILE EDITED SUCCESSFULLY'});
-      }
-    });*/
+
+      console.log('profile edited');
+      res.render('profile', {title: 'PROFILE EDITED!'} )
+    });
   }
 });
 module.exports = router;

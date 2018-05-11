@@ -1,8 +1,16 @@
 <h1>{{title}}</h1>
+{{#if errors}}
+  {{#each errors}}
+  <div class="alert alert-danger">
+    {{this.msg}}
+  </div>
+    
+  {{/each}}
+{{/if}}
 <h7>HELLO WELCOME TO YOUR PROFILE PAGE! YOUR SPONSOR IS  AND YOUR REFERRAL LINK IS</h7>
 <br/>
 <h5>EDIT PROFILE</h5>
-<form method ="POST" action ="/profile">
+<form method ="POST" action ="/member/profile">
   <div class="form-group">
     <label for="Phone">Phone number</label>
     <input type="phone" class="form-control" 
